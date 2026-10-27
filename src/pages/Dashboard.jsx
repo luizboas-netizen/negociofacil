@@ -1,5 +1,48 @@
+
+import { useEffect, useState } from 'react'
 import ProgressBar from '../components/ProgressBar'
+
+const CHAVE_VENDAS = 'negociofacil-vendas'
+
 function Dashboard() {
+  
+  const [vendas, setVendas] = useState([])
+  const [produtos, setProdutos] = useState([])
+  
+  useEffect(() => {
+    const vendasSalvas = localStorage.getItem(CHAVE_VENDAS)
+    const produtosSalvos = localStorage.getItem('negociofacil-produtos')
+
+    if (vendasSalvas) {
+      setVendas(JSON.parse(vendasSalvas))
+    }
+
+    if (produtosSalvos) {
+      setProdutos(JSON.parse(produtosSalvos))
+    }
+  }, [])
+
+  const faturamento = vendas.reduce(
+    (soma, venda) => soma + Number(venda.total || 0),
+    0,
+  )
+
+  const metaMensal = 20000
+  const valorRestante = Math.max(0, metaMensal - faturamento)
+
+  const produtosEstoqueBaixo = produtos.filter(
+  (produto) =>
+    Number(produto.estoque) <= Number(produto.minimo ?? 5),
+)
+
+  function formatarMoeda(valor) {
+    return valor.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    })
+  }
+
+
   return (
     <>
       <section className="welcome">
@@ -20,8 +63,10 @@ function Dashboard() {
             <span>Vendas do mês</span>
             <span className="stat-icon blue">↗</span>
           </div>
-          <h3>R$ 12.450,00</h3>
-          <p className="stat-note">Valores demonstrativos</p>
+          
+<h3>{formatarMoeda(faturamento)}</h3>
+<p className="stat-note">Faturamento das vendas registradas</p>
+
         </article>
 
         <article className="stat-card">
@@ -29,8 +74,10 @@ function Dashboard() {
             <span>Produtos cadastrados</span>
             <span className="stat-icon cyan">□</span>
           </div>
-          <h3>128</h3>
-          <p className="stat-note">Itens no catálogo</p>
+        
+<h3>{produtos.length}</h3>
+<p className="stat-note">Itens no catálogo</p>
+
         </article>
 
         <article className="stat-card">
@@ -38,8 +85,10 @@ function Dashboard() {
             <span>Estoque baixo</span>
             <span className="stat-icon orange">!</span>
           </div>
-          <h3>7</h3>
-          <p className="stat-note warning">Precisam de atenção</p>
+       
+<h3>{produtosEstoqueBaixo.length}</h3>
+<p className="stat-note warning">Precisam de atenção</p>
+
         </article>
 
         <article className="stat-card">
@@ -47,8 +96,10 @@ function Dashboard() {
             <span>Vendas realizadas</span>
             <span className="stat-icon green">✓</span>
           </div>
-          <h3>46</h3>
-          <p className="stat-note">Neste mês</p>
+         
+<h3>{vendas.length}</h3>
+<p className="stat-note">Vendas registradas</p>
+
         </article>
       </section>
 
@@ -62,16 +113,28 @@ function Dashboard() {
             <span className="tag">Outubro</span>
           </div>
 
-          <div className="goal-values">
-            <strong>R$ 12.450,00</strong>
-            <span>de R$ 20.000,00</span>
-          </div>
+         
+<div className="goal-values">
+  <strong>{formatarMoeda(faturamento)}</strong>
+  <span>de {formatarMoeda(metaMensal)}</span>
+</div>
 
           
-<ProgressBar value={12450} max={20000} label="Meta mensal de vendas" />
+
+<ProgressBar
+  value={faturamento}
+  max={metaMensal}
+  label="Meta mensal de vendas"
+/>
 
           <div className="goal-footer">
-            <span>Faltam R$ 7.550,00</span>
+          
+<span>
+  {valorRestante > 0
+    ? `Faltam ${formatarMoeda(valorRestante)}`
+    : 'Meta mensal atingida!'}
+</span>
+
             <span className="goal-indicator">Em andamento</span>
           </div>
         </article>
@@ -85,32 +148,32 @@ function Dashboard() {
             <span className="stock-alert">!</span>
           </div>
 
-          <div className="stock-item">
-            <div className="product-symbol">⚓</div>
-            <div className="stock-description">
-              <strong>Âncora galvanizada</strong>
-              <small>Estoque mínimo: 5 un.</small>
-            </div>
-            <span className="stock-quantity">2 un.</span>
-          </div>
+         
+{produtos
+  .filter(
+    (produto) =>
+      Number(produto.estoque) <= Number(produto.minimo ?? 5) &&
+      !produto.arquivado,
+  )
+  .map((produto) => (
+    <div className="stock-item" key={produto.id}>
+      <div className="product-symbol">⚓</div>
+      <div className="stock-description">
+        <strong>{produto.nome}</strong>
+        <small>Estoque baixo</small>
+      </div>
+      <span className="stock-quantity">
+        {produto.estoque} un.
+      </span>
+    </div>
+  ))}
 
-          <div className="stock-item">
-            <div className="product-symbol">〰</div>
-            <div className="stock-description">
-              <strong>Corda náutica 10 mm</strong>
-              <small>Estoque mínimo: 10 un.</small>
-            </div>
-            <span className="stock-quantity">4 un.</span>
-          </div>
 
-          <div className="stock-item">
-            <div className="product-symbol">◉</div>
-            <div className="stock-description">
-              <strong>Boia de sinalização</strong>
-              <small>Estoque mínimo: 6 un.</small>
-            </div>
-            <span className="stock-quantity">3 un.</span>
-          </div>
+{produtos.filter(
+  (produto) => Number(produto.estoque) <= 5 && !produto.arquivado,
+).length === 0 && (
+  <p>Nenhum produto com estoque baixo.</p>
+)}
         </article>
       </section>
     </>

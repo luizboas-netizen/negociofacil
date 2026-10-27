@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import { useToast } from '../context/ToastContext'
 import Pagination from '../components/Pagination'
@@ -57,7 +58,12 @@ function Produtos() {
         const lista = JSON.parse(produtosSalvos)
 
         if (Array.isArray(lista)) {
-          setProdutos(lista)
+          const listaNormalizada = lista.map((produto) => ({
+            ...produto,
+            minimo: Number(produto.minimo ?? 5),
+          }))
+
+          setProdutos(listaNormalizada)
         } else {
           showToast('Os dados salvos dos produtos são inválidos.', 'error')
         }
@@ -168,7 +174,7 @@ function Produtos() {
     setCategoria(produto.categoria)
     setPreco(String(produto.preco))
     setEstoque(String(produto.estoque))
-    setMinimo(String(produto.minimo))
+    setMinimo(String(produto.minimo ?? 5))
 
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -281,7 +287,7 @@ function Produtos() {
               step="1"
               value={minimo}
               onChange={(event) => setMinimo(event.target.value)}
-              placeholder="0"
+              placeholder="Ex.: 4"
               required
             />
           </label>
@@ -328,50 +334,57 @@ function Produtos() {
                 <th>Categoria</th>
                 <th>Preço</th>
                 <th>Estoque</th>
+                <th>Estoque mínimo</th>
                 <th>Status</th>
                 <th>Ações</th>
               </tr>
             </thead>
 
             <tbody>
-              {produtosPaginados.map((produto) => (
-                <tr key={produto.id}>
-                  <td>
-                    <strong>{produto.nome}</strong>
-                  </td>
-                  <td>{produto.categoria}</td>
-                  <td>{formatarMoeda(produto.preco)}</td>
-                  <td>{produto.estoque} un.</td>
-                  <td>
-                    <span
-                      className={
-                        produto.estoque <= produto.minimo
-                          ? 'stock-status low'
-                          : 'stock-status normal'
-                      }
-                    >
-                      {produto.estoque <= produto.minimo
-                        ? 'Estoque baixo'
-                        : 'Normal'}
-                    </span>
-                  </td>
-                  <td>
-                    <DropdownMenu
-  onView={() =>
-    showToast(
-      `${produto.nome} — Categoria: ${produto.categoria}; Preço: ${formatarMoeda(produto.preco)}; Estoque: ${produto.estoque} unidade(s).`,
-    )
-  }
-  onEdit={() => editarProduto(produto)}
-  onArchive={() => arquivarProduto(produto.id)}
-/>
-                  </td>
-                </tr>
-              ))}
+              {produtosPaginados.map((produto) => {
+                const estoqueMinimo = Number(produto.minimo ?? 5)
+                const estoqueAtual = Number(produto.estoque)
+
+                const estoqueBaixo = estoqueAtual <= estoqueMinimo
+
+                return (
+                  <tr key={produto.id}>
+                    <td>
+                      <strong>{produto.nome}</strong>
+                    </td>
+                    <td>{produto.categoria}</td>
+                    <td>{formatarMoeda(produto.preco)}</td>
+                    <td>{estoqueAtual} un.</td>
+                    <td>{estoqueMinimo} un.</td>
+                    <td>
+                      <span
+                        className={
+                          estoqueBaixo
+                            ? 'stock-status low'
+                            : 'stock-status normal'
+                        }
+                      >
+                        {estoqueBaixo ? 'Estoque baixo' : 'Normal'}
+                      </span>
+                    </td>
+                    <td>
+                      <DropdownMenu
+                        onView={() =>
+                          showToast(
+                            `${produto.nome} — Categoria: ${produto.categoria}; Preço: ${formatarMoeda(produto.preco)}; Estoque: ${estoqueAtual} unidade(s); Estoque mínimo: ${estoqueMinimo} unidade(s).`,
+                          )
+                        }
+                        onEdit={() => editarProduto(produto)}
+                        onArchive={() => arquivarProduto(produto.id)}
+                      />
+                    </td>
+                  </tr>
+                )
+              })}
 
               {produtosFiltrados.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="empty-products">
+                  <td colSpan="7" className="empty-products">
                     Nenhum produto encontrado.
                   </td>
                 </tr>

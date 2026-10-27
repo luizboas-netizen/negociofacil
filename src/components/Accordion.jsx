@@ -1,5 +1,10 @@
 
+import { useId } from 'react'
+
 function Accordion({ title, children, isOpen, onToggle }) {
+  const id = useId()
+  const panelId = `${id}-panel`
+
   return (
     <div className="accordion">
       <button
@@ -7,6 +12,7 @@ function Accordion({ title, children, isOpen, onToggle }) {
         className="accordion-trigger"
         onClick={onToggle}
         aria-expanded={isOpen}
+        aria-controls={panelId}
       >
         <span>{title}</span>
         <span className="accordion-arrow" aria-hidden="true">
@@ -14,11 +20,13 @@ function Accordion({ title, children, isOpen, onToggle }) {
         </span>
       </button>
 
-      {isOpen && (
-        <div className="accordion-content">
-          {children}
-        </div>
-      )}
+      <div
+        id={panelId}
+        className="accordion-content"
+        hidden={!isOpen}
+      >
+        {children}
+      </div>
     </div>
   )
 }

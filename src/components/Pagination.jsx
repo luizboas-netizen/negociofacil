@@ -1,4 +1,5 @@
 
+
 function Pagination({ currentPage, totalPages, onPageChange }) {
   if (totalPages <= 1) {
     return null
@@ -11,7 +12,10 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
   }
 
   return (
-    <nav className="pagination" aria-label="Paginação">
+    <nav
+      className="pagination"
+      aria-label={`Paginação. Página ${currentPage} de ${totalPages}`}
+    >
       <button
         type="button"
         onClick={() => changePage(currentPage - 1)}
@@ -25,7 +29,9 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
           <button
             key={page}
             type="button"
-            className={currentPage === page ? 'page-number active' : 'page-number'}
+            className={
+              currentPage === page ? 'page-number active' : 'page-number'
+            }
             onClick={() => changePage(page)}
             aria-current={currentPage === page ? 'page' : undefined}
           >
